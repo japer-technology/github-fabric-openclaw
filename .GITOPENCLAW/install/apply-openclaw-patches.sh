@@ -199,14 +199,9 @@ if [ -f "$FILE" ]; then
   if grep -q 'n/a (CI environment)' "$FILE" 2>/dev/null; then
     patch_skipped "$PATCH_NAME"
   else
-    # Patch the Gateway service row: add isCI check
-    sed -i 's|Item: "Gateway service",\n\s*Value: !daemon\.installed|Item: "Gateway service",\n            Value: isCI\n              ? "n/a (CI environment)"\n              : !daemon.installed|' "$FILE" 2>/dev/null || true
-
-    # Simpler approach: just add isCI check before the "unknown" fallback for both services
-    if ! grep -q 'n/a (CI environment)' "$FILE" 2>/dev/null; then
-      sed -i 's|: { Item: "Gateway service", Value: "unknown" }|: { Item: "Gateway service", Value: isCI ? "n/a (CI environment)" : "unknown" }|' "$FILE"
-      sed -i 's|: { Item: "Node service", Value: "unknown" }|: { Item: "Node service", Value: isCI ? "n/a (CI environment)" : "unknown" }|' "$FILE"
-    fi
+    # Add isCI check to the fallback "unknown" values for Gateway and Node service rows.
+    sed -i 's|: { Item: "Gateway service", Value: "unknown" }|: { Item: "Gateway service", Value: isCI ? "n/a (CI environment)" : "unknown" }|' "$FILE"
+    sed -i 's|: { Item: "Node service", Value: "unknown" }|: { Item: "Node service", Value: isCI ? "n/a (CI environment)" : "unknown" }|' "$FILE"
 
     if grep -q 'n/a (CI environment)' "$FILE" 2>/dev/null; then
       patch_applied "$PATCH_NAME"

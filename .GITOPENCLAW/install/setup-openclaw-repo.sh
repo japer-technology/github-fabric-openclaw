@@ -84,7 +84,7 @@ if [ -f "$PATCH_SCRIPT" ]; then
   PATCH_OUTPUT=$(bash "$PATCH_SCRIPT" --repo-dir "$REPO_DIR" 2>&1)
   echo "$PATCH_OUTPUT"
   # If any patches were applied (not just skipped), we need to rebuild
-  if echo "$PATCH_OUTPUT" | grep -q '✅.*applied\|Patches applied: [1-9]'; then
+  if echo "$PATCH_OUTPUT" | grep -q 'Patches applied: [1-9]'; then
     NEEDS_REBUILD=true
   fi
   echo ""
