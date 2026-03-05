@@ -77,7 +77,7 @@
  * - Node.js built-in `fs` module  (existsSync, readFileSync, writeFileSync, mkdirSync)
  * - Node.js built-in `path` module (resolve)
  * - GitHub CLI (`gh`)             — must be authenticated via GITHUB_TOKEN
- * - `openclaw` binary             — installed by `bun install` from package.json
+ * - `openclaw` binary             — built from .GITOPENCLAW/repo/openclaw/openclaw
  * - System tools: `git`, `bash`
  * - Bun runtime                   — for Bun.spawn and top-level await
  */
@@ -98,10 +98,14 @@ import type { TrustPolicy } from "./trust-level.ts";
 
 // ─── Paths and event context ───────────────────────────────────────────────────
 // `import.meta.dir` resolves to `.GITOPENCLAW/lifecycle/`; stepping up one level
-// gives us the `.GITOPENCLAW/` directory which contains `state/` and `node_modules/`.
+// gives us the `.GITOPENCLAW/` directory which contains `state/` and `repo/`.
 const gitopenclawDir = resolve(import.meta.dir, "..");
 const repoRoot = resolve(gitopenclawDir, "..");
 const stateDir = resolve(gitopenclawDir, "state");
+
+// OpenClaw source is cloned into .GITOPENCLAW/repo/openclaw/openclaw and built
+// locally; the entry point is the `openclaw.mjs` file in that clone.
+const openclawRepoDir = resolve(gitopenclawDir, "repo", "openclaw", "openclaw");
 const issuesDir = resolve(stateDir, "issues");
 const sessionsDir = resolve(stateDir, "sessions");
 const usageLogPath = resolve(stateDir, "usage.log");
@@ -442,7 +446,7 @@ try {
   }
 
   if (parsedCmd.command !== "agent" && parsedCmd.command in SUPPORTED_COMMANDS) {
-    const openclawBin = resolve(gitopenclawDir, "node_modules", ".bin", "openclaw");
+    const openclawBin = resolve(openclawRepoDir, "openclaw.mjs");
     const slashArgs = [openclawBin, parsedCmd.command, ...parsedCmd.args];
     console.log(`Executing slash command: ${slashArgs.join(" ")}`);
 
@@ -461,7 +465,7 @@ try {
   // ── Run the OpenClaw agent (Approach A: CLI invocation) ─────────────────────
   // Use `openclaw agent --local` for embedded execution without a Gateway.
   // The --json flag provides structured output for response extraction.
-  const openclawBin = resolve(gitopenclawDir, "node_modules", ".bin", "openclaw");
+  const openclawBin = resolve(openclawRepoDir, "openclaw.mjs");
   const openclawArgs = [
     openclawBin,
     "agent",

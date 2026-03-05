@@ -1,5 +1,4 @@
 {
-  "dependencies": {
-    "openclaw": "^2026.2.19"
-  }
+  "private": true,
+  "description": "GitOpenClaw — OpenClaw is sourced from .GITOPENCLAW/repo/openclaw/openclaw (local clone)"
 }

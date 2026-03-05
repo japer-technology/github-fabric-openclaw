@@ -210,14 +210,14 @@ describe("Reaction indicator", () => {
     assert.ok(agent.includes("DELETE"));
   });
 
-  it("workflow runs indicator before install", () => {
+  it("workflow runs indicator before openclaw setup", () => {
     const workflow = readFile(".github/workflows/GITOPENCLAW-WORKFLOW-AGENT.yml");
     const indicatorIdx = workflow.indexOf("GITOPENCLAW-INDICATOR");
-    const installIdx = workflow.indexOf("bun install");
-    assert.ok(indicatorIdx > 0 && installIdx > 0);
+    const setupIdx = workflow.indexOf("setup-openclaw-repo.sh");
+    assert.ok(indicatorIdx > 0 && setupIdx > 0);
     assert.ok(
-      indicatorIdx < installIdx,
-      "Indicator must run before dependency install"
+      indicatorIdx < setupIdx,
+      "Indicator must run before OpenClaw source setup"
     );
   });
 });
@@ -603,17 +603,16 @@ describe("OpenClaw integration", () => {
     );
   });
 
-  it("package.json depends on openclaw", () => {
-    const pkg = JSON.parse(readFile(".GITOPENCLAW/package.json"));
-    assert.ok(pkg.dependencies.openclaw, "package.json must depend on openclaw");
+  it("setup-openclaw-repo.sh exists for cloning OpenClaw from source", () => {
+    const setupScript = path.resolve(GITOPENCLAW, "install", "setup-openclaw-repo.sh");
+    assert.ok(fs.existsSync(setupScript), "install/setup-openclaw-repo.sh must exist");
   });
 
-  it("package.json uses published npm version (not file: link)", () => {
+  it("package.json does not depend on openclaw npm package", () => {
     const pkg = JSON.parse(readFile(".GITOPENCLAW/package.json"));
-    const version = pkg.dependencies.openclaw;
     assert.ok(
-      !version.startsWith("file:"),
-      "openclaw dependency must use a published npm version, not file: link"
+      !pkg.dependencies || !pkg.dependencies.openclaw,
+      "package.json must not depend on openclaw npm package — use local repo clone instead"
     );
   });
 });

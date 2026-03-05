@@ -8,6 +8,10 @@ bun.lock
 bun.lockb
 !.GITOPENCLAW/bun.lock
 !.GITOPENCLAW/bun.lockb
+
+# OpenClaw source clone (built from source at runtime)
+.GITOPENCLAW/repo/
+
 coverage
 __pycache__/
 *.pyc
