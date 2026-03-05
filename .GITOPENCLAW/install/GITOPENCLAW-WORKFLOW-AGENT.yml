@@ -18,6 +18,8 @@ jobs:
     concurrency:
       group: github-claw-${{ github.repository }}-issue-${{ github.event.issue.number }}-${{ github.run_id }}
       cancel-in-progress: false
+    env:
+      OPENCLAW_REF: main
     if: >-
       (github.event_name == 'issues')
       || (github.event_name == 'issue_comment' && github.event.comment.user.login != 'github-actions[bot]')
@@ -61,8 +63,21 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install .GITOPENCLAW dependencies
-        run: cd .GITOPENCLAW && bun install
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Cache OpenClaw repo
+        uses: actions/cache@v4
+        with:
+          path: .GITOPENCLAW/repo/openclaw/openclaw
+          key: ${{ runner.os }}-openclaw-repo-${{ env.OPENCLAW_REF }}
+          restore-keys: |
+            ${{ runner.os }}-openclaw-repo-
+
+      - name: Clone and build OpenClaw from source
+        run: bash .GITOPENCLAW/install/setup-openclaw-repo.sh --ref "${{ env.OPENCLAW_REF }}"
 
       - name: Run
         env:

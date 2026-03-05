@@ -83,11 +83,12 @@ More providers are supported by OpenClaw — see the [OpenClaw documentation](ht
 | Concern | Location | Mutability |
 |---|---|---|
 | **Source code** | Repository root (outside `.GITOPENCLAW/`) | Read-only — never modified by the agent |
+| **OpenClaw runtime** | `.GITOPENCLAW/repo/openclaw/openclaw/` (gitignored) | Cloned and built at runtime from [openclaw/openclaw](https://github.com/openclaw/openclaw) |
 | **Runtime state** | `.GITOPENCLAW/state/` | Mutable — sessions, memory, mappings committed as audit trail |
 | **OpenClaw internals** | `.GITOPENCLAW/state/` (gitignored subdirs) | Ephemeral — caches, sqlite, sandbox regenerated each run |
 | **Credentials** | GitHub Actions secrets only | Never stored in files |
 
-The agent reads the raw source code as workspace context but stores all runtime data (sessions, memory, sqlite, caches) inside `.GITOPENCLAW/state/` via `OPENCLAW_STATE_DIR`. This ensures the repository source remains untouched.
+The agent reads the raw source code as workspace context but stores all runtime data (sessions, memory, sqlite, caches) inside `.GITOPENCLAW/state/` via `OPENCLAW_STATE_DIR`. The OpenClaw runtime itself is cloned from source into `.GITOPENCLAW/repo/openclaw/openclaw/` and built locally — no npm dependency required. This ensures the repository source remains untouched and `.GITOPENCLAW` is fully self-contained.
 
 ## Configuration
 
@@ -116,7 +117,10 @@ Settings are stored in `.GITOPENCLAW/config/settings.json`:
 ├── install/
 │   ├── GITOPENCLAW-INSTALLER.ts       # One-time setup script
 │   ├── GITOPENCLAW-WORKFLOW-AGENT.yml # Workflow template
+│   ├── setup-openclaw-repo.sh         # Clones and builds OpenClaw from source
 │   └── ...                            # Templates and config
+├── repo/                              # (gitignored) OpenClaw source clone
+│   └── openclaw/openclaw/             # Full clone of openclaw/openclaw
 ├── state/
 │   ├── .gitignore                     # Excludes OpenClaw internals (caches, sqlite, etc.)
 │   ├── memory.log                     # Append-only memory
