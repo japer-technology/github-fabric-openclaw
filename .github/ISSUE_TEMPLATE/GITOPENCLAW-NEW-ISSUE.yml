@@ -1,0 +1,13 @@
+name: New GITOPENCLAW Issue
+description: Start a new issue for GITOPENCLAW.
+title: ""
+labels: [gitopenclaw]
+body:
+  - type: textarea
+    id: message
+    attributes:
+      label: Message
+      description: Describe the issue, idea, or question.
+      placeholder: What would you like to discuss?
+    validations:
+      required: true

@@ -1,0 +1,13 @@
+name: New .GITCLAW Conversation
+description: Start a new conversation or raise a topic.
+title: ""
+labels: [gitclaw]
+body:
+  - type: textarea
+    id: message
+    attributes:
+      label: Message
+      description: Say what you want to discuss.
+      placeholder: Describe the issue, idea, or question.
+    validations:
+      required: true
