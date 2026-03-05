@@ -45,19 +45,29 @@ echo ""
 if [ ! -d "$REPO_DIR/.git" ]; then
   echo "Cloning openclaw/openclaw..."
   mkdir -p "$(dirname "$REPO_DIR")"
-  git clone --depth 1 --branch "$REF" "$OPENCLAW_REMOTE" "$REPO_DIR" 2>/dev/null || \
+  # Try cloning with --branch first (works for branches and tags).
+  # If the ref is a commit SHA, --branch won't work, so fall back to a
+  # plain clone and then fetch + checkout the specific ref.
+  if git clone --depth 1 --branch "$REF" "$OPENCLAW_REMOTE" "$REPO_DIR" 2>&1; then
+    echo "Cloned at ref: $REF"
+  else
+    echo "Could not clone with --branch $REF; trying default branch + fetch..."
     git clone --depth 1 "$OPENCLAW_REMOTE" "$REPO_DIR"
-
-  # If the clone used default branch and we wanted a specific ref, check it out
-  if [ "$REF" != "main" ]; then
     cd "$REPO_DIR"
-    git fetch --depth 1 origin "$REF" 2>/dev/null && git checkout FETCH_HEAD 2>/dev/null || true
+    if ! git fetch --depth 1 origin "$REF"; then
+      echo "::error::Failed to fetch ref '$REF' from $OPENCLAW_REMOTE"
+      exit 1
+    fi
+    git checkout FETCH_HEAD
   fi
   echo "Clone complete."
 else
   echo "Repository already cloned."
   cd "$REPO_DIR"
-  # Verify we're at the expected ref
+  # For moving refs (e.g. "main"), pull latest to avoid stale cache
+  echo "Updating to latest $REF..."
+  git fetch --depth 1 origin "$REF" 2>&1 && git checkout FETCH_HEAD 2>&1 || \
+    echo "::warning::Could not update to latest $REF; using cached version"
   CURRENT_REF=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
   echo "Current HEAD: $CURRENT_REF"
 fi
@@ -75,7 +85,7 @@ else
 fi
 
 # ── Build ─────────────────────────────────────────────────────────────────────
-if [ ! -d "$REPO_DIR/dist" ] || [ ! -f "$REPO_DIR/dist/entry.js" -a ! -f "$REPO_DIR/dist/entry.mjs" ]; then
+if [ ! -d "$REPO_DIR/dist" ] || { [ ! -f "$REPO_DIR/dist/entry.js" ] && [ ! -f "$REPO_DIR/dist/entry.mjs" ]; }; then
   echo "Building OpenClaw..."
   if command -v pnpm &>/dev/null; then
     pnpm build
