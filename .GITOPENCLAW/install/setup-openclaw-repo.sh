@@ -74,6 +74,24 @@ fi
 
 cd "$REPO_DIR"
 
+# ── Apply GITOPENCLAW patches ────────────────────────────────────────────────
+# Source code modifications for CI-awareness and path isolation.
+# See .GITOPENCLAW/docs/APPLIED-MASTER-MODIFICATIONS.md for full details.
+PATCH_SCRIPT="$GITOPENCLAW_DIR/install/apply-openclaw-patches.sh"
+NEEDS_REBUILD=false
+if [ -f "$PATCH_SCRIPT" ]; then
+  echo ""
+  PATCH_OUTPUT=$(bash "$PATCH_SCRIPT" --repo-dir "$REPO_DIR" 2>&1)
+  echo "$PATCH_OUTPUT"
+  # If any patches were applied (not just skipped), we need to rebuild
+  if echo "$PATCH_OUTPUT" | grep -q 'Patches applied: [1-9]'; then
+    NEEDS_REBUILD=true
+  fi
+  echo ""
+else
+  echo "::warning::Patch script not found at $PATCH_SCRIPT — skipping patches"
+fi
+
 # ── Install dependencies ─────────────────────────────────────────────────────
 # Use pnpm if available, fall back to npm
 if command -v pnpm &>/dev/null; then
@@ -85,6 +103,12 @@ else
 fi
 
 # ── Build ─────────────────────────────────────────────────────────────────────
+# Rebuild if dist/ is missing or if patches were applied (source files changed).
+if [ "$NEEDS_REBUILD" = true ]; then
+  echo "Patches applied — rebuilding to incorporate source changes..."
+  rm -rf "$REPO_DIR/dist"
+fi
+
 if [ ! -d "$REPO_DIR/dist" ] || { [ ! -f "$REPO_DIR/dist/entry.js" ] && [ ! -f "$REPO_DIR/dist/entry.mjs" ]; }; then
   echo "Building OpenClaw..."
   if command -v pnpm &>/dev/null; then
